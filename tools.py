@@ -18,16 +18,12 @@ def to_api_ll(p1: float, p2: float) -> str:
     return f"{p2},{p1}"
 
 
-def to_api_spn(spn: float) -> str:
-    return f"{spn},{spn}"
-
-
-def get_image(apikey: str, ll: str, spn: str) -> QByteArray:
+def get_image(apikey: str, ll: str, zoom: int) -> QByteArray:
     url = "https://static-maps.yandex.ru/v1"
     params = {
         "apikey": apikey,
         "ll": ll,
-        "spn": spn
+        "z": zoom
     }
     resp = requests.get(url, params)
     if resp.status_code != 200:
