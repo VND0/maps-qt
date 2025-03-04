@@ -12,16 +12,20 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(600, 425)
+        MainWindow.resize(600, 457)
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.map_lbl = QtWidgets.QLabel(parent=self.centralwidget)
-        self.map_lbl.setGeometry(QtCore.QRect(0, 0, 600, 400))
+        self.map_lbl.setGeometry(QtCore.QRect(0, 40, 600, 400))
         font = QtGui.QFont()
         font.setKerning(True)
         self.map_lbl.setFont(font)
+        self.map_lbl.setFrameShape(QtWidgets.QFrame.Shape.Box)
         self.map_lbl.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.map_lbl.setObjectName("map_lbl")
+        self.theme_switcher = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.theme_switcher.setGeometry(QtCore.QRect(10, 5, 131, 32))
+        self.theme_switcher.setObjectName("theme_switcher")
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
@@ -34,3 +38,4 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Время вспоминать QT"))
         self.map_lbl.setText(_translate("MainWindow", "Тут будет карта. Возможно, у вас нет Интернета"))
+        self.theme_switcher.setText(_translate("MainWindow", "Поменять тему"))

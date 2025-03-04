@@ -1,3 +1,5 @@
+from typing import Literal, Callable, Any
+
 import requests
 from PyQt6.QtCore import QByteArray
 
@@ -14,16 +16,40 @@ class ApiException(Exception):
         return f"ApiException({self.code}, {str(self.content)})"
 
 
-def to_api_ll(p1: float, p2: float) -> str:
-    return f"{p2},{p1}"
+def cache_images(func: Callable[[Any], Any]):
+    cache = dict()
+
+    def wrapper(*args, **kwargs):
+        nonlocal cache
+        key = args, tuple(kwargs.items())
+        already = cache.get(key)
+        if already is not None:
+            return already
+        else:
+            result = func(*args, **kwargs)
+            cache[key] = result
+
+            keys = cache.keys()
+            if len(keys) > 100:
+                del cache[tuple(keys)[0]]
+
+            return result
+
+    return wrapper
 
 
-def get_image(apikey: str, ll: str, zoom: int) -> QByteArray:
+def to_api_ll(lat: float, lon: float) -> str:
+    return f"{lon},{lat}"
+
+
+@cache_images
+def get_image(apikey: str, ll: str, zoom: int, theme: Literal["light", "dark"]) -> QByteArray:
     url = "https://static-maps.yandex.ru/v1"
     params = {
         "apikey": apikey,
         "ll": ll,
-        "z": zoom
+        "z": zoom,
+        "theme": theme
     }
     resp = requests.get(url, params)
     if resp.status_code != 200:

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>425</height>
+    <height>457</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>0</y>
+      <y>40</y>
       <width>600</width>
       <height>400</height>
      </rect>
@@ -28,11 +28,27 @@
       <kerning>true</kerning>
      </font>
     </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
     <property name="text">
      <string>Тут будет карта. Возможно, у вас нет Интернета</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="theme_switcher">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>5</y>
+      <width>131</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Поменять тему</string>
     </property>
    </widget>
   </widget>
