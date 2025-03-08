@@ -1,3 +1,5 @@
+from copy import deepcopy
+from decimal import Decimal
 from typing import Literal, Callable, Any
 
 import requests
@@ -22,6 +24,7 @@ def cache_images(func: Callable[[Any], Any]):
     def wrapper(*args, **kwargs):
         nonlocal cache
         key = args, tuple(kwargs.items())
+        print(key)
         already = cache.get(key)
         if already is not None:
             return already
@@ -35,20 +38,27 @@ def cache_images(func: Callable[[Any], Any]):
 
             return result
 
-    return wrapper
+    return deepcopy(wrapper)
 
 
-def to_api_ll(lat: float, lon: float) -> str:
+def to_api_spn(spn: Decimal) -> str:
+    spn = round(spn, 4).to_eng_string()
+    return f"{spn},{spn}"
+
+
+def to_api_ll(lat: Decimal, lon: Decimal) -> str:
+    lat = round(lat, 6).to_eng_string()
+    lon = round(lon, 6).to_eng_string()
     return f"{lon},{lat}"
 
 
 @cache_images
-def get_image(apikey: str, ll: str, zoom: int, theme: Literal["light", "dark"]) -> QByteArray:
+def get_image(apikey: str, ll: str, spn: str, theme: Literal["light", "dark"]) -> QByteArray:
     url = "https://static-maps.yandex.ru/v1"
     params = {
         "apikey": apikey,
         "ll": ll,
-        "z": zoom,
+        "spn": spn,
         "theme": theme
     }
     resp = requests.get(url, params)
