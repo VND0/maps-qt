@@ -58,6 +58,7 @@ class MapApp(QMainWindow, Ui_MainWindow):
         # Searching
         self.enter_btn = QShortcut(QKeySequence("Enter"), self)
         self.enter_btn.activated.connect(self.find_object)
+        self.search_reset_btn.clicked.connect(self.reset_search)
 
     def change_map_theme(self):
         self.map_theme = "dark" if self.map_theme == "light" else "light"
@@ -112,6 +113,13 @@ class MapApp(QMainWindow, Ui_MainWindow):
         ll = get_ll(self.geocoder_api_key, search_query)
         self.ll = self.tag_ll = ll
         self.add_tag = True
+        self.set_map_image()
+
+    def reset_search(self):
+        self.search_edit.clearFocus()
+        self.search_edit.clear()
+        self.add_tag = False
+        self.tag_ll = None
         self.set_map_image()
 
 
