@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Literal, Callable, Any
 
@@ -17,6 +18,12 @@ class ApiException(Exception):
 
     def __repr__(self):
         return f"ApiException({self.code}, {str(self.content)})"
+
+
+@dataclass
+class GeocoderResponse:
+    ll: tuple[Decimal, Decimal]
+    address: str
 
 
 def cache_images(func: Callable[[Any], Any]):
@@ -72,7 +79,7 @@ def get_image(apikey: str, ll: str, spn: str, theme: Literal["light", "dark"], a
     return QByteArray(resp.content)
 
 
-def get_ll(apikey: str, geocode: str):
+def get_object_info(apikey: str, geocode: str):
     url = "https://geocode-maps.yandex.ru/v1"
     params = {
         "apikey": apikey,
@@ -85,5 +92,18 @@ def get_ll(apikey: str, geocode: str):
         raise ApiException(response.status_code, response.content)
 
     data = json.loads(response.content)
-    position = data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["Point"]["pos"]
-    return tuple(map(Decimal, position.split()[::-1]))
+    with open("out.json", "w") as f:
+        json.dump(data, f, ensure_ascii=False)
+
+    try:
+        position = data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["Point"]["pos"]
+        address = data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["metaDataProperty"][
+            "GeocoderMetaData"]["Address"]["formatted"]
+    except IndexError:
+        raise ApiException(response.status_code, "Объект не найден".encode())
+
+    response = GeocoderResponse(
+        ll=tuple(map(Decimal, position.split()[::-1])),
+        address=address,
+    )
+    return response

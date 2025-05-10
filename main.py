@@ -6,7 +6,7 @@ from PyQt6.QtGui import QPixmap, QShortcut, QKeySequence
 from PyQt6.QtWidgets import QApplication, QMainWindow
 
 from design import Ui_MainWindow
-from tools import to_api_ll, get_image, ApiException, to_api_spn, get_ll
+from tools import to_api_ll, get_image, ApiException, to_api_spn, get_object_info
 
 
 class MapApp(QMainWindow, Ui_MainWindow):
@@ -108,10 +108,16 @@ class MapApp(QMainWindow, Ui_MainWindow):
         if not search_query:
             self.statusbar.showMessage("Поле поиска пустое")
             return
-        self.search_edit.clearFocus()
 
-        ll = get_ll(self.geocoder_api_key, search_query)
-        self.ll = self.tag_ll = ll
+        try:
+            object_info = get_object_info(self.geocoder_api_key, search_query)
+        except ApiException as e:
+            self.statusbar.showMessage(e.content.decode())
+            return
+
+        self.search_edit.clearFocus()
+        self.address_lbl.setText(object_info.address)
+        self.ll = self.tag_ll = object_info.ll
         self.add_tag = True
         self.set_map_image()
 
@@ -120,6 +126,7 @@ class MapApp(QMainWindow, Ui_MainWindow):
         self.search_edit.clear()
         self.add_tag = False
         self.tag_ll = None
+        self.address_lbl.clear()
         self.set_map_image()
 
 
