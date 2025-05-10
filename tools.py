@@ -1,3 +1,4 @@
+import json
 from copy import deepcopy
 from decimal import Decimal
 from typing import Literal, Callable, Any
@@ -24,7 +25,6 @@ def cache_images(func: Callable[[Any], Any]):
     def wrapper(*args, **kwargs):
         nonlocal cache
         key = args, tuple(kwargs.items())
-        print(key)
         already = cache.get(key)
         if already is not None:
             return already
@@ -46,14 +46,15 @@ def to_api_spn(spn: Decimal) -> str:
     return f"{spn},{spn}"
 
 
-def to_api_ll(lat: Decimal, lon: Decimal) -> str:
+def to_api_ll(lat: Decimal | None, lon: Decimal | None) -> str:
     lat = round(lat, 6).to_eng_string()
     lon = round(lon, 6).to_eng_string()
     return f"{lon},{lat}"
 
 
 @cache_images
-def get_image(apikey: str, ll: str, spn: str, theme: Literal["light", "dark"]) -> QByteArray:
+def get_image(apikey: str, ll: str, spn: str, theme: Literal["light", "dark"], add_tag: bool,
+              tag_ll: tuple[Decimal, Decimal]) -> QByteArray:
     url = "https://static-maps.yandex.ru/v1"
     params = {
         "apikey": apikey,
@@ -61,8 +62,28 @@ def get_image(apikey: str, ll: str, spn: str, theme: Literal["light", "dark"]) -
         "spn": spn,
         "theme": theme
     }
+    if add_tag:
+        params["pt"] = f"{to_api_ll(*tag_ll)},comma"
+
     resp = requests.get(url, params)
     if resp.status_code != 200:
         raise ApiException(resp.status_code, resp.content)
 
     return QByteArray(resp.content)
+
+
+def get_ll(apikey: str, geocode: str):
+    url = "https://geocode-maps.yandex.ru/v1"
+    params = {
+        "apikey": apikey,
+        "geocode": geocode,
+        "format": "json",
+        "results": "1",
+    }
+    response = requests.get(url, params)
+    if response.status_code != 200:
+        raise ApiException(response.status_code, response.content)
+
+    data = json.loads(response.content)
+    position = data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["Point"]["pos"]
+    return tuple(map(Decimal, position.split()[::-1]))
