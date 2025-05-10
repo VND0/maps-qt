@@ -24,6 +24,7 @@ class ApiException(Exception):
 class GeocoderResponse:
     ll: tuple[Decimal, Decimal]
     address: str
+    postal_code: str | None
 
 
 def cache_images(func: Callable[[Any], Any]):
@@ -99,11 +100,14 @@ def get_object_info(apikey: str, geocode: str):
         position = data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["Point"]["pos"]
         address = data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["metaDataProperty"][
             "GeocoderMetaData"]["Address"]["formatted"]
+        postal_code = data["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]["metaDataProperty"][
+            "GeocoderMetaData"]["Address"].get("postal_code")
     except IndexError:
         raise ApiException(response.status_code, "Объект не найден".encode())
 
     response = GeocoderResponse(
         ll=tuple(map(Decimal, position.split()[::-1])),
         address=address,
+        postal_code=postal_code
     )
     return response

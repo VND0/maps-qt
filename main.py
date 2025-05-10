@@ -6,7 +6,7 @@ from PyQt6.QtGui import QPixmap, QShortcut, QKeySequence
 from PyQt6.QtWidgets import QApplication, QMainWindow
 
 from design import Ui_MainWindow
-from tools import to_api_ll, get_image, ApiException, to_api_spn, get_object_info
+from tools import to_api_ll, get_image, ApiException, to_api_spn, get_object_info, GeocoderResponse
 
 
 class MapApp(QMainWindow, Ui_MainWindow):
@@ -31,6 +31,7 @@ class MapApp(QMainWindow, Ui_MainWindow):
         self.spn = Decimal("0.05")
         self.add_tag = False
         self.tag_ll = None
+        self.found_object: GeocoderResponse | None = None
 
         self.theme_switcher.clicked.connect(self.change_map_theme)
         self.search_btn.clicked.connect(self.find_object)
@@ -59,6 +60,7 @@ class MapApp(QMainWindow, Ui_MainWindow):
         self.enter_btn = QShortcut(QKeySequence("Enter"), self)
         self.enter_btn.activated.connect(self.find_object)
         self.search_reset_btn.clicked.connect(self.reset_search)
+        self.include_index_checkbox.toggled.connect(self.postal_checkbox_toggled)
 
     def change_map_theme(self):
         self.map_theme = "dark" if self.map_theme == "light" else "light"
@@ -110,7 +112,7 @@ class MapApp(QMainWindow, Ui_MainWindow):
             return
 
         try:
-            object_info = get_object_info(self.geocoder_api_key, search_query)
+            self.found_object = object_info = get_object_info(self.geocoder_api_key, search_query)
         except ApiException as e:
             self.statusbar.showMessage(e.content.decode())
             return
@@ -119,6 +121,8 @@ class MapApp(QMainWindow, Ui_MainWindow):
         self.address_lbl.setText(object_info.address)
         self.ll = self.tag_ll = object_info.ll
         self.add_tag = True
+        if self.include_index_checkbox.isChecked():
+            self.add_postal_code()
         self.set_map_image()
 
     def reset_search(self):
@@ -128,6 +132,23 @@ class MapApp(QMainWindow, Ui_MainWindow):
         self.tag_ll = None
         self.address_lbl.clear()
         self.set_map_image()
+        self.found_object = None
+
+    def remove_postal_code(self):
+        self.address_lbl.setText(self.found_object.address)
+
+    def add_postal_code(self):
+        self.address_lbl.setText(
+            f"{self.found_object.address}, {self.found_object.postal_code or ' '}".strip().strip(","))
+
+    def postal_checkbox_toggled(self):
+        if not self.found_object:
+            return
+
+        if self.include_index_checkbox.isChecked():
+            self.add_postal_code()
+        else:
+            self.remove_postal_code()
 
 
 def except_hook(cls, exception, traceback):
